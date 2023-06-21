@@ -5,6 +5,8 @@ from setuptools import setup, find_packages
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
+# python3 setup.py sdist bdist_wheel
+
 
 setup(
     name="proteovae",
@@ -27,10 +29,9 @@ setup(
 
     install_requires=[
         'numpy==1.22.4',
-        'pydantic>=1.10.0',
-        'scikit_learn>=1.2.0',
+        'pydantic==1.10.7',
+        'scikit_learn==1.2.2',
         'torch==2.0.0',
         'tqdm==4.65.0',
     ],
-
 )
