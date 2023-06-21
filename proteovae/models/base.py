@@ -2,13 +2,21 @@ import torch
 from torch import nn
 from typing import List
 
-# MAKE SURE TO ADD THE TYPES IN ALL OF THE FUNCTIONS AND STUFF SO IT LOOKS NICE IN SPHINX
-
 
 class Encoder(nn.Module):
-    """
-    doc string for the encoder 
+    r"""Generic Encoder implementation inheriting from :class:`torch.nn.Module`
 
+    .. code-block::
+
+        >>> from proteovae.models.base import Encoder 
+        ...
+        >>> input_dim = 512
+        >>> latent_dim = 16
+        >>> hidden_dims1 = [256,128,64,]
+        >>> hidden_dims2 = [256,]
+        ...
+        >>> enc1 = Encoder(input_dim, latent_dim, hidden_dims1)
+        >>> enc2 = Encoder(input_dim, latent_dim, hidden_dims2)
     """
 
     def __init__(self, input_dim: int, latent_dim: int, hidden_dims: List):
@@ -16,7 +24,8 @@ class Encoder(nn.Module):
         self.latent_dim = latent_dim
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
-        # build variable length encoder block
+
+        # variable length hidden layers
         encoder_block = [
             nn.Linear(self.input_dim, self.hidden_dims[0]), nn.ReLU(),]
         for i in range(len(hidden_dims)-1):
@@ -32,14 +41,28 @@ class Encoder(nn.Module):
         self.fc_logvar = nn.Linear(self.hidden_dims[-1], self.latent_dim)
 
     def forward(self, x):
+        r"""
+        Parameters:
+            x (~torch.Tensor): data batch of dimension [B x N] 
+
+        Returns:
+            dict(str, [~torch.Tensor, ~torch.Tensor]): location-scale parameters of posterior distribution
+
+        """
         x = self.linear_block(x)
         mu = self.fc_mu(x)
         log_var = self.fc_logvar(x)
 
-        return {'cont': (mu, log_var)}
+        output = {'cont': (mu, log_var)}
+
+        return output
 
 
 class Decoder(nn.Module):
+    r"""Generic Encoder implementation inheriting from :class:`torch.nn.Module`
+
+    """
+
     def __init__(self, output_dim, latent_dim, hidden_dims):
         super(Decoder, self).__init__()
         self.latent_dim = latent_dim
@@ -60,11 +83,23 @@ class Decoder(nn.Module):
         )
 
     def forward(self, x):
+        r"""
+        Maps embeddings to reconstructions
+
+        Parameters: 
+            x (~torch.Tensor): tensor of batch embeddings [B x D]
+
+        Returns:
+            recon (~torch.Tensor): tensor of reconstructions [B x N]
+        """
         recon = self.linear_block(x)
         return recon
 
 
 class Guide(nn.Module):
+    r"""Shallow logistic regression implementation. 
+    """
+
     def __init__(self, dim_in, dim_out):
         super(Guide, self).__init__()
         self.classifier = nn.Sequential(
@@ -72,10 +107,20 @@ class Guide(nn.Module):
         )
 
     def forward(self, x):
+        """
+        Returns:
+            ~torch.Tensor: logits of class probabilites of shape [B x C], with B batch size and C num classes
+        """
         return self.classifier(x)
 
 
 class JointEncoder(Encoder):
+    r"""
+    Implementation following https://arxiv.org/abs/1804.00104 allowing 
+    for categorical latent dimensions in addition to the standard continuous ones.
+    Subclasses :class:`~Encoder`. 
+    """
+
     def __init__(self, input_dim, latent_dim, hidden_dims, disc_dim):
         super().__init__(input_dim, latent_dim, hidden_dims)
 
@@ -84,6 +129,27 @@ class JointEncoder(Encoder):
         self.fc_alpha_logits = nn.Linear(self.hidden_dims[2], self.disc_dim)
 
     def forward(self, x):
+        r"""
+        Parameters:
+            x (~torch.Tensor): data batch of dimension [B x N] 
+
+        Returns:
+            dict(str, [~torch.Tensor, ~torch.Tensor]): location-scale parameters of categorical and normal posterior distributions
+
+        .. code-block::
+
+            >>> from proteovae.models.base import JointDecoder
+            ...
+            >>> joint_decoder = JointDecoder(input_dim = 512, 
+            ...                              latent_dim = 16, 
+            ...                              hidden_dims = [256,128,], 
+            ...                              discrete_dim =2)
+            ...
+            >>> post_params = joint_decoder(torch.rand(64, 512))
+            >>> cont = post_params['cont']
+            >>> disc = post_params['disc']
+        """
+
         x = self.linear_block(x)
         mu = self.fc_mu(x)
         log_var = self.fc_logvar(x)

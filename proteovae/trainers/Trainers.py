@@ -1,19 +1,42 @@
 import torch
-
-# ADD DOCSTRINGS
+from ..models.utils import ModelOutput
+from torch.optim import lr_scheduler
 
 
 class BaseTrainer():
-    def __init__(self, model, optimizer):
+    """Trainer object handling optimzer steps, backpropogation, and device assertions for batch data
+
+    Args:
+        model (~torch.nn.Module): the object to be trained 
+        optimizer (~torch.optim.Optimizer): an optimzer object handling gradient updates over training
+    """
+
+    def __init__(self,
+                 model: torch.nn.Module,
+                 optimizer: torch.optim.Optimizer
+                 ):
+
         self.model = model
         self.optimizer = optimizer
         self.num_iters = 0
 
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
+
         self.model.to(self.device)
 
-    def train(self, train_loader, epochs, val_data=None):
+    def train(self,
+              train_loader: torch.utils.data.DataLoader,
+              epochs: int,
+              val_data=None):
+        r"""
+        Training loop for models derived from :class:`~proteovae.models.models.GuidedVAE`
+
+        Parameters:
+            train_loader (~torch.utils.data.DataLoader): training data loader 
+            epochs (int): number of passes over `train_loader`
+            val_data: Optional tuple of torch.Tensors to assess the performance of model while training
+        """
         for epoch in range(epochs):
             print(f'Epoch [{epoch+1}/{epochs}]')
             print(
@@ -33,6 +56,14 @@ class BaseTrainer():
         print(f'Done!')
 
     def _train_epoch(self, data_loader):
+        """Single epoch train protocol 
+
+        Parameters:
+            data_loader (~torch.utils.data.DataLoader): training loader 
+        Returns:
+            losses (ModelOutput): last computed losses in the epoch 
+        """
+
         self.model.train()
         size = len(data_loader.dataset)
 
@@ -44,6 +75,14 @@ class BaseTrainer():
         return losses
 
     def _train_iteration(self, data_batch):
+        """Single train iteration 
+
+        Args:
+            data_batch (~torch.Tensor): batch from next(iter(train_loader))
+
+        Returns:
+            losses (ModelOutput): loss computed over the batch 
+         """
         # update term weightings in elbo
         self.model._elbo_scheduler_update(self.num_iters)
 
@@ -68,6 +107,14 @@ class BaseTrainer():
         return vals
 
     def _to_device(self, data):
+        r"""
+        Handles device side assertions for mapping the batch data to the `Trainer` device. 
+
+        Args:
+            data (~torch.Tensor, ~torch.Tensor): data and labels 
+        Returns:
+            data (~torch.Tensor, ~torch.Tensor): data on trainer device 
+        """
         X, Y = data
         X = X.to(self.device)
         Y = Y.to(self.device)
@@ -76,6 +123,15 @@ class BaseTrainer():
 
 
 class ScheduledTrainer(BaseTrainer):
+    r"""Trainer inheriting from :class:`BaseTrainer`.  Adds the functionality of adaptively scheduling learning rate
+
+    Args:
+        model (~torch.nn.Module): the object to be trained 
+        optimizer (~torch.optim.Optimizer): an optimzer object handling gradient updates over training
+        scheduler (~torch.optim.lr_scheduler.LRScheduler): an lr_scheduler object
+
+    """
+
     def __init__(self, model, optimizer, scheduler):
         super(ScheduledTrainer, self).__init__(model, optimizer)
         self.scheduler = scheduler
@@ -101,4 +157,7 @@ class ScheduledTrainer(BaseTrainer):
         return losses
 
     def _on_epoch_end(self, metrics):
+        """
+        Empty method overwritten externally to provide a hook called on epoch end. Ex, print statements, saving intermediate results 
+        """
         pass

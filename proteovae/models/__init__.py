@@ -1,3 +1,12 @@
-# from .base import Encoder, Decoder, Guide, JointEncoder
+from .utils import BaseConfig, GuideConfig, ModelOutput
 from .models import BaseVAE, GuidedVAE, JointVAE
-from .utils import ModelOutput, BaseConfig, GuideConfig
+
+
+__all__ = [
+    "BaseConfig",
+    "GuideConfig",
+    "ModelOutput",
+    "BaseVAE",
+    "GuidedVAE",
+    "JointVAE"
+]

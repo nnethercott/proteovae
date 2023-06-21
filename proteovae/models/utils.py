@@ -1,19 +1,24 @@
 from collections import OrderedDict
-from dataclasses import dataclass, field
 from typing import Union, Optional, Callable
+from pydantic import BaseModel, PositiveInt, PositiveFloat, Field
+from enum import Enum
 
-# borrowing conventions from https://github.com/clementchadebec/benchmark_VAE
+# ~borrowing~ conventions from https://github.com/clementchadebec/benchmark_VAE
+
+# some potentially useful threads for Pydantic related issues
+# https://stackoverflow.com/questions/72630488/valueerror-mutable-default-class-dict-for-field-headers-is-not-allowed-use
+# https://stackoverflow.com/questions/68766527/how-to-set-a-default-value-for-enum-class-for-pydantic-fastapi
 
 
 class ModelOutput(OrderedDict):
     """
-    Wrapper providing a nice __repr__ for printing various model outputs to console
+    Wrapper providing a legible `__repr__` for printing various model outputs to console
     """
 
     def __repr__(self):
-        '''
-        format fields nicely for print on train/eval epoch ends 
-        '''
+        """
+        iterates over self.items to produce a " | " delimited str to print to console 
+        """
         ps = ""
         for i, (k, v) in enumerate(self.items()):
             ps += f'{k}: {v:>4f}'
@@ -24,26 +29,37 @@ class ModelOutput(OrderedDict):
         return ps
 
 
-# RECONFIGURE ALL OF THE STUFF BELOW TO USE PYDANTIC
-# FROM PYDANTIC IMPORT BASE
-
-# some configs for vae's of interest
-@dataclass
-class BaseConfig:
-    input_dim: Union[int, None] = None
-    latent_dim: int = 10
-    device: str = "cpu"
+class TorchDeviceChoices(str, Enum):
+    """
+    Enum class constraining the possible device choices 
+    """
+    cpu = "cpu"
+    cuda = "cuda"
 
 
-@dataclass
+class BaseConfig(BaseModel):
+    """
+    Base config file all VAEs require to pass high-level model params
+    """
+    input_dim: Union[PositiveInt, None] = None
+    latent_dim: PositiveInt = 10
+    device: TorchDeviceChoices = TorchDeviceChoices.cpu
+
+
 class GuideConfig(BaseConfig):
-    guided_dim: int = 1
-    beta: float = 1.0
-    eta: float = 10.0
-    gamma: float = 1000.0
-    elbo_scheduler: dict = field(default_factory=lambda: {
+    """
+    Config file for GuidedVAE 
+    """
+    guided_dim: PositiveInt = 1
+    beta: PositiveFloat = 1.0
+    eta: PositiveFloat = 10.0
+    gamma: PositiveFloat = 1000.0
+    elbo_scheduler: dict = Field(default_factory=lambda: {
                                  'beta': lambda x: 1.0, 'eta': lambda x: 1.0, 'gamma': lambda x: 1.0})
-    # need to come up with a more adaptable way to do this :( --> wrapper?
 
 
-# https://stackoverflow.com/questions/72630488/valueerror-mutable-default-class-dict-for-field-headers-is-not-allowed-use
+class JointConfig(GuideConfig):
+    """
+    Config file for JointVAE
+    """
+    disc_dim: PositiveInt = 2

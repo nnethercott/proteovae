@@ -20,16 +20,16 @@ setup(
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Programming Language :: Python :: 3",
+        "Operating System :: Unix",
     ],
     package_dir={"": "proteovae"},
     packages=find_packages(where="proteovae"),
 
     install_requires=[
         'numpy==1.22.4',
-        'pandas==1.5.0',
-        'scikit_learn==1.2.2',
+        'pydantic>=1.10.0',
+        'scikit_learn>=1.2.0',
         'torch==2.0.0',
-        'torchvision==0.15.1',
         'tqdm==4.65.0',
     ],
 
