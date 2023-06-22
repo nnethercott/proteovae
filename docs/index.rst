@@ -35,6 +35,7 @@ For local installations try git cloning and installing the project repo
 .. code-block:: bash
 
    $ git clone git@github.com:nnethercott/proteovae.git
+   $ cd proteovae 
    $ pip install -e .
 
 
