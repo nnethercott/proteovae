@@ -3,3 +3,6 @@
 .vscode
 /docs/_build
 /tests
+/examples/data
+/examples/notebooks/mnist_proteovae.ipynb:wq
+

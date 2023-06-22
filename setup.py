@@ -34,4 +34,7 @@ setup(
         'torch==2.0.0',
         'tqdm==4.65.0',
     ],
+    extras_require={
+        'tutorial': ['torchvision==0.15.1', 'jupyter', 'matplotlib==3.7.1'],
+    }
 )

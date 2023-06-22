@@ -51,9 +51,9 @@ class GuidedConfig(BaseConfig):
     Config file for GuidedVAE 
     """
     guided_dim: PositiveInt = 1
-    beta: PositiveFloat = 1.0
-    eta: PositiveFloat = 10.0
-    gamma: PositiveFloat = 1000.0
+    beta: float = 1.0
+    eta: float = 10.0
+    gamma: float = 1000.0
     elbo_scheduler: dict = Field(default_factory=lambda: {
                                  'beta': lambda x: 1.0, 'eta': lambda x: 1.0, 'gamma': lambda x: 1.0})
 
