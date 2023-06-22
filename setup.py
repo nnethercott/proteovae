@@ -24,8 +24,8 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: Unix",
     ],
-    package_dir={"": "proteovae"},
-    packages=find_packages(where="proteovae"),
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
 
     install_requires=[
         'numpy==1.22.4',

@@ -46,7 +46,7 @@ class BaseConfig(BaseModel):
     device: TorchDeviceChoices = TorchDeviceChoices.cpu
 
 
-class GuideConfig(BaseConfig):
+class GuidedConfig(BaseConfig):
     """
     Config file for GuidedVAE 
     """
@@ -58,7 +58,7 @@ class GuideConfig(BaseConfig):
                                  'beta': lambda x: 1.0, 'eta': lambda x: 1.0, 'gamma': lambda x: 1.0})
 
 
-class JointConfig(GuideConfig):
+class JointConfig(GuidedConfig):
     """
     Config file for JointVAE
     """

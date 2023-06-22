@@ -1,10 +1,10 @@
-from .utils import BaseConfig, GuideConfig, ModelOutput
+from .utils import BaseConfig, GuidedConfig, ModelOutput
 from .models import BaseVAE, GuidedVAE, JointVAE
 
 
 __all__ = [
     "BaseConfig",
-    "GuideConfig",
+    "GuidedConfig",
     "ModelOutput",
     "BaseVAE",
     "GuidedVAE",
