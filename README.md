@@ -21,7 +21,7 @@
 
 This library implements a convenient set of modules for designing and implementing several different variational autoencoder frameworks. So far support is provided for the vanilla [VAE](https://arxiv.org/abs/1312.6114), [beta-VAE](https://openreview.net/forum?id=Sy2fzU9gl), and the here-presented guided VAE (GVAE). 
 
-`proteovae` also provides a few different model trainers to facilitate the training process, although you can also use standard PyTorch or [Lightning](https://www.pytorchlightning.ai/index.html) as you please.  This package was developed as a tool to explore genomics data (hence *proteo*-vae), for a much more comprehensive suite of VAE implementations I would point you in the direction of [pythae](https://github.com/clementchadebec/benchmark_VAE/tree/main).
+`proteovae` also provides a few different model trainers to facilitate the training process, although you can also use standard PyTorch or [Lightning](https://www.pytorchlightning.ai/index.html) as you please.  This package was developed as a tool to explore genomics data (hence *proteo[mics]*-vae), for a much more comprehensive suite of VAE implementations I would point you in the direction of [pythae](https://github.com/clementchadebec/benchmark_VAE/tree/main).
 
 **News** 📢
 
