@@ -119,7 +119,7 @@ Two different `proteovae.trainers` Trainers (`BaseTrainer` and `ScheduledTrainer
 ...                                         start_factor=1.0, 
 ...                                         end_factor=0.33, 
 ...                                         total_iters=n_epochs*len(train_loader))
-... #trainer init 
+>>> #trainer init 
 >>> trainer = ScheduledTrainer(model, optimizer, scheduler)
 ...
 >>> #train
