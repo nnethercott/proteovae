@@ -135,7 +135,8 @@ class GuidedVAE(BaseVAE):
         qz_x, decoded = self.forward(X)
 
         # Reconstruction
-        recon = torch.square(decoded-X).sum(dim=1).mean()
+        # recon = torch.square(decoded-X).sum(dim=1).mean()
+        recon = nn.functional.binary_cross_entropy(decoded, X)*(28*28)
 
         # KL-Divergence
         kl = dist.kl.kl_divergence(qz_x, self.pz).sum(-1).mean()
