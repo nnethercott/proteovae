@@ -34,7 +34,12 @@ Utils
    :undoc-members:
    :show-inheritance:
 
-.. autoclass:: proteovae.models.GuideConfig
+.. autoclass:: proteovae.models.GuidedConfig
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. autoclass:: proteovae.models.JointConfig
    :members:
    :undoc-members:
    :show-inheritance:
