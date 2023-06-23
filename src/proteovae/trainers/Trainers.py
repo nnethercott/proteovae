@@ -39,8 +39,8 @@ class BaseTrainer():
         """
         for epoch in range(epochs):
             print(f'Epoch [{epoch+1}/{epochs}]')
-            print(
-                f'(beta: {self.model.beta:>.1f}, eta: {self.model.eta:>.1f}, gamma: {self.model.gamma:>.1f})')
+            
+            #print(f'(beta: {self.model.beta:>.1f}, eta: {self.model.eta:>.1f}, gamma: {self.model.gamma:>.1f})')
 
             # Training
             losses = self._train_epoch(train_loader)
