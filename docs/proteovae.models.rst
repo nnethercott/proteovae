@@ -17,6 +17,9 @@ VAEs
 .. autoclass:: proteovae.models.BaseVAE
    :members:
 
+.. autoclass:: proteovae.models.BetaVAE
+   :members:
+
 .. autoclass:: proteovae.models.GuidedVAE
    :members:
 

@@ -44,6 +44,7 @@ class BaseConfig(BaseModel):
     input_dim: Union[PositiveInt, None] = None
     latent_dim: PositiveInt = 10
     device: TorchDeviceChoices = TorchDeviceChoices.cpu
+    beta: float = 1.0
 
 
 class GuidedConfig(BaseConfig):
@@ -51,7 +52,6 @@ class GuidedConfig(BaseConfig):
     Config file for GuidedVAE 
     """
     guided_dim: PositiveInt = 1
-    beta: float = 1.0
     eta: float = 10.0
     gamma: float = 1000.0
     elbo_scheduler: dict = Field(default_factory=lambda: {

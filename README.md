@@ -128,5 +128,6 @@ Two different `proteovae.trainers` Trainers (`BaseTrainer` and `ScheduledTrainer
 ```
 
 # Tutorials
-<!-- - [mnist_proteovae.ipynb](https://github.com/nnethercott/proteovae/examples/notebooks) shows you how to implement your own architectures for traditional vae tasks<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/nnethercott/proteovae/examples/notebooks/mnist_proteovae.ipynb)  -->
+- [mnist_proteovae.ipynb](https://github.com/nnethercott/proteovae/tree/main/examples/notebooks/) shows you how to implement your own architectures for traditional vae tasks<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nnethercott/proteovae/blob/main/examples/notebooks/mnist_proteovae.ipynb) 
+  
 - [nonlinear_pca.ipynb](https://github.com/nnethercott/proteovae/tree/main/examples/notebooks/) motivates a generic use case for the GVAE framework<br>[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nnethercott/proteovae/blob/main/examples/notebooks/nonlinear_pca.ipynb) 

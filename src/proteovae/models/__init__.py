@@ -1,5 +1,5 @@
 from .utils import BaseConfig, GuidedConfig, JointConfig, ModelOutput
-from .models import BaseVAE, GuidedVAE, JointVAE
+from .models import BaseVAE, BetaVAE, GuidedVAE, JointVAE
 
 
 __all__ = [
@@ -8,6 +8,7 @@ __all__ = [
     "JointConfig",
     "ModelOutput",
     "BaseVAE",
+    "BetaVAE",
     "GuidedVAE",
     "JointVAE"
 ]
