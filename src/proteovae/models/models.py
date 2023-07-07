@@ -5,6 +5,7 @@ import torch.nn.functional as F
 from .utils import *
 from .base import *
 from typing import Optional
+import numpy as np
 
 
 class BaseVAE(nn.Module):
@@ -153,7 +154,7 @@ class GuidedVAE(BetaVAE):
 
         decoder (~base.Decoder): Instance of a decoder-like architecture. Works with any :class:`~nn.Module` object mapping embeddings to reconstructions. 
 
-        guide (~base.Guide): Logistic regression network to predict labels at latent scale 
+        guides (~base.Guide): Logistic regression networks to predict labels at latent scale 
 
 
     .. note::
@@ -161,7 +162,7 @@ class GuidedVAE(BetaVAE):
 
     """
 
-    def __init__(self, guide, **kwargs):
+    def __init__(self, guides, **kwargs):
         super().__init__(**kwargs)
 
         # Tuning ELBO
@@ -171,8 +172,9 @@ class GuidedVAE(BetaVAE):
         self.elbo_scheduler = self.model_config.elbo_scheduler
 
         # Guide
-        self.guide = guide
+        self.guides = guides
         self.guided_dim = self.model_config.guided_dim
+        self.guided_dims = np.cumsum([0]+self.model_config.guided_dims)
 
     def loss_function(self, data):
         r"""
@@ -225,21 +227,34 @@ class GuidedVAE(BetaVAE):
         dipvae = 10*dipvae_i + dipvae_ii
 
         # Prediction loss
-        g = mu[:, -self.guided_dim:]
-        guided_logits = self.guide(g)
-        guided_preds = guided_logits.argmax(dim=1)
-        guided = F.cross_entropy(guided_logits, Y.type(torch.int64))
+        guided = 0.
+        acc = {}
+        l = self.latent_dim-1
+        for i, guide in enumerate(self.guides):
+            # extract labels from batch
+            y = Y[:, i]
+
+            # compute loss for factor i
+            g = mu[:, l-self.guided_dims[i+1]:l-self.guided_dims[i]]
+            guided_logits = guide(g)
+            guided_preds = guided_logits.argmax(dim=1)
+            guided += F.cross_entropy(guided_logits, y.type(torch.int64))
+
+            acc[f'acc_{i}'] = (guided_preds == y).sum(
+            ).float()/(guided_preds.size(0))
+
+        # borrow convention from CLIP
+        guided /= len(self.guides)
 
         # total loss
         loss = recon + self.beta*kl + self.eta*guided + self.gamma*(dipvae)
-        acc = (guided_preds == Y).sum().float()/(guided_preds.size(0))
 
         losses = ModelOutput(
             loss=loss,
             recon=recon,
             kl=kl,
             dipvae=dipvae,
-            acc=acc
+            **acc
         )
 
         return losses
@@ -259,13 +274,20 @@ class GuidedVAE(BetaVAE):
         qz_x, _ = self.forward(X)
         mu = qz_x.loc.clone()
 
-        g = mu[:, -self.guided_dim:]
-        guided_logits = self.guide(g)
-        guided_preds = guided_logits.argmax(dim=1)
+        val_acc = {}
+        l = self.latent_dim-1
+        for i, guide in enumerate(self.guides):
+            # extract from batch
+            y = Y[:, i]
 
-        val_acc = (guided_preds == Y).sum().float()/guided_preds.size(0)
+            g = mu[:, l-self.guided_dims[i+1]:l-self.guided_dims[i]]
+            guided_logits = guide(g)
+            guided_preds = guided_logits.argmax(dim=1)
 
-        return ModelOutput(val_acc=val_acc)
+            val_acc[f'val_{i}'] = (
+                guided_preds == y).sum().float()/guided_preds.size(0)
+
+        return ModelOutput(**val_acc)
 
     def _elbo_scheduler_update(self, e):
         """

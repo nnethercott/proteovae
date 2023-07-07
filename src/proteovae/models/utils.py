@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from typing import Union, Optional, Callable
+from typing import Union, Optional, Callable, List
 from pydantic import BaseModel, PositiveInt, PositiveFloat, Field
 from enum import Enum
 
@@ -51,7 +51,7 @@ class GuidedConfig(BaseConfig):
     """
     Config file for GuidedVAE 
     """
-    guided_dim: PositiveInt = 1
+    guided_dims: List[PositiveInt]
     eta: float = 10.0
     gamma: float = 1000.0
     elbo_scheduler: dict = Field(default_factory=lambda: {
