@@ -39,6 +39,13 @@ To install the latest stable release of this library run the following using ``p
 $ pip install proteovae
 ``` 
 
+For dev purposes you can also clone this repo and install locally like 
+```bash 
+$ git clone git@github.com:nnethercott/proteovae.git
+$ cd proteovae
+$ pip install -e .
+```
+
 
 # Defining Custom Architectures
 In addition to the models provided `proteovae.models.base` module you can also write your own encoder and decoder architectures for the VAE you're fitting.  
@@ -76,7 +83,7 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...         model_config = config,
 ...         encoder = enc,
 ...         decoder = dec, 
-...         guides = [Guide(dim_in = guided_dim, dim_out = n_classes)]
+...         guides = [Guide(dim_in = guided_dims[0], dim_out = n_classes)]
 )
 ...
 >>> #or with generic torch objects 
@@ -96,7 +103,7 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...         model_config = config,
 ...         encoder = enc,
 ...         decoder = custom_dec, 
-...         guides = [Guide(dim_in = guided_dim, dim_out = n_classes)]
+...         guides = [Guide(dim_in = guided_dims[0], dim_out = n_classes)]
 ```
 
 # Model Training 
