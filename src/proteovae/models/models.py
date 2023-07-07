@@ -4,7 +4,8 @@ import torch.distributions as dist
 import torch.nn.functional as F
 from .utils import *
 from .base import *
-from typing import Optional
+from typing import Optional, Union 
+import numpy as np
 
 
 class BaseVAE(nn.Module):
@@ -37,6 +38,8 @@ class BaseVAE(nn.Module):
 
         self.encoder = encoder
         self.decoder = decoder
+        
+        self.recon_loss = self.model_config.recon_loss 
 
     def forward(self, x):
         raise NotImplementedError
@@ -120,8 +123,10 @@ class BetaVAE(BaseVAE):
 
         # Reconstruction
         # recon = torch.square(decoded-X).sum(dim=1).mean()
-        recon = nn.functional.binary_cross_entropy(decoded, X)
-        recon *= (28*28)
+        #recon = nn.functional.binary_cross_entropy(decoded, X)
+        #recon *= (28*28)
+        
+        recon = self.recon_loss(X, decoded)
 
         # KL-Divergence
         kl = dist.kl.kl_divergence(qz_x, self.pz).sum(-1).mean()
@@ -141,6 +146,23 @@ class BetaVAE(BaseVAE):
 
     def _elbo_scheduler_update(self, e):
         pass
+    
+    def embed(self, x):
+        r"""
+        General function to produce embeddings for passed inputs 
+        
+        Args:
+            x (Union[~numpy.array, ~torch.Tensor]) : input data to be embedded
+            
+        Returns:
+            zs (~torch.Tensor): embeddings 
+            
+        """
+        emb = self.encoder(torch.tensor(x, device = self.device, dtype=torch.float32))
+        zs = emb['cont'][0]
+        zs = zs.cpu().detach()
+        
+        return zs
 
 
 class GuidedVAE(BetaVAE):
@@ -153,7 +175,7 @@ class GuidedVAE(BetaVAE):
 
         decoder (~base.Decoder): Instance of a decoder-like architecture. Works with any :class:`~nn.Module` object mapping embeddings to reconstructions. 
 
-        guide (~base.Guide): Logistic regression network to predict labels at latent scale 
+        guides (~base.Guide): Logistic regression networks to predict labels at latent scale 
 
 
     .. note::
@@ -161,7 +183,7 @@ class GuidedVAE(BetaVAE):
 
     """
 
-    def __init__(self, guide, **kwargs):
+    def __init__(self, guides, **kwargs):
         super().__init__(**kwargs)
 
         # Tuning ELBO
@@ -170,9 +192,9 @@ class GuidedVAE(BetaVAE):
 
         self.elbo_scheduler = self.model_config.elbo_scheduler
 
-        # Guide
-        self.guide = guide
-        self.guided_dim = self.model_config.guided_dim
+        # Guides
+        self.guides = nn.ModuleList(guides) #ModuleList makes guide weights trainable
+        self.guided_dims = np.cumsum([0]+self.model_config.guided_dims)
 
     def loss_function(self, data):
         r"""
@@ -203,7 +225,7 @@ class GuidedVAE(BetaVAE):
         qz_x, decoded = self.forward(X)
 
         # Reconstruction
-        recon = torch.square(decoded-X).sum(dim=1).mean()
+        recon = self.recon_loss(X, decoded)
 
         # KL-Divergence
         kl = dist.kl.kl_divergence(qz_x, self.pz).sum(-1).mean()
@@ -225,21 +247,34 @@ class GuidedVAE(BetaVAE):
         dipvae = 10*dipvae_i + dipvae_ii
 
         # Prediction loss
-        g = mu[:, -self.guided_dim:]
-        guided_logits = self.guide(g)
-        guided_preds = guided_logits.argmax(dim=1)
-        guided = F.cross_entropy(guided_logits, Y.type(torch.int64))
+        guided = 0.
+        acc = {}
+        l = self.latent_dim-1
+        for i, guide in enumerate(self.guides):
+            # extract labels from batch
+            y = Y[:, i]
+
+            # compute loss for factor i
+            g = mu[:, l-self.guided_dims[i+1]:l-self.guided_dims[i]]
+            guided_logits = guide(g)
+            guided_preds = guided_logits.argmax(dim=1)
+            guided += F.cross_entropy(guided_logits, y.type(torch.int64))
+
+            acc[f'acc_{i}'] = (guided_preds == y).sum(
+            ).float()/(guided_preds.size(0))
+
+        # borrow convention from CLIP
+        guided /= len(self.guides)
 
         # total loss
         loss = recon + self.beta*kl + self.eta*guided + self.gamma*(dipvae)
-        acc = (guided_preds == Y).sum().float()/(guided_preds.size(0))
 
         losses = ModelOutput(
             loss=loss,
             recon=recon,
             kl=kl,
             dipvae=dipvae,
-            acc=acc
+            **acc
         )
 
         return losses
@@ -259,13 +294,20 @@ class GuidedVAE(BetaVAE):
         qz_x, _ = self.forward(X)
         mu = qz_x.loc.clone()
 
-        g = mu[:, -self.guided_dim:]
-        guided_logits = self.guide(g)
-        guided_preds = guided_logits.argmax(dim=1)
+        val_acc = {}
+        l = self.latent_dim-1
+        for i, guide in enumerate(self.guides):
+            # extract from batch
+            y = Y[:, i]
 
-        val_acc = (guided_preds == Y).sum().float()/guided_preds.size(0)
+            g = mu[:, l-self.guided_dims[i+1]:l-self.guided_dims[i]]
+            guided_logits = guide(g)
+            guided_preds = guided_logits.argmax(dim=1)
 
-        return ModelOutput(val_acc=val_acc)
+            val_acc[f'val_{i}'] = (
+                guided_preds == y).sum().float()/guided_preds.size(0)
+
+        return ModelOutput(**val_acc)
 
     def _elbo_scheduler_update(self, e):
         """
@@ -371,7 +413,7 @@ class JointVAE(GuidedVAE):
         (qz_x, qc_x), decoded = self.forward(X)
 
         # Reconstruction mse
-        recon = torch.square(decoded-X).sum(dim=1).mean()
+        recon = self.recon_loss(X, decoded)
 
         # KL-Divergence [ decomposition ]
         kl_z = dist.kl.kl_divergence(qz_x, self.pz).sum(-1).mean()

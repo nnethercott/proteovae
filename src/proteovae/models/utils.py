@@ -1,7 +1,9 @@
 from collections import OrderedDict
-from typing import Union, Optional, Callable
+from typing import Union, Optional, Callable, List
 from pydantic import BaseModel, PositiveInt, PositiveFloat, Field
 from enum import Enum
+import torch 
+from typing import Callable
 
 # ~borrowing~ conventions from https://github.com/clementchadebec/benchmark_VAE
 
@@ -35,7 +37,7 @@ class TorchDeviceChoices(str, Enum):
     """
     cpu = "cpu"
     cuda = "cuda"
-
+    
 
 class BaseConfig(BaseModel):
     """
@@ -45,13 +47,14 @@ class BaseConfig(BaseModel):
     latent_dim: PositiveInt = 10
     device: TorchDeviceChoices = TorchDeviceChoices.cpu
     beta: float = 1.0
+    recon_loss : Callable = lambda x, y: torch.square(y-x).sum(dim=1).mean()
 
 
 class GuidedConfig(BaseConfig):
     """
     Config file for GuidedVAE 
     """
-    guided_dim: PositiveInt = 1
+    guided_dims: List[PositiveInt]
     eta: float = 10.0
     gamma: float = 1000.0
     elbo_scheduler: dict = Field(default_factory=lambda: {

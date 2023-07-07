@@ -37,7 +37,14 @@ Version 0.0.1 now on PyPI! ❤️🇮🇹🧑‍🔬
 To install the latest stable release of this library run the following using ``pip`` 
 ```bash
 $ pip install proteovae
-``` 
+```
+
+For dev purposes you can also clone this repo and install locally like 
+```bash 
+$ git clone git@github.com:nnethercott/proteovae.git
+$ cd proteovae
+$ pip install -e .
+```
 
 
 # Defining Custom Architectures
@@ -51,13 +58,13 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...
 >>> input_dim = 64
 >>> latent_dim = 10
->>> guided_dim = 1
+>>> guided_dims = [1,]
 >>> n_classes = 2 # dummy 
 ...
 >>> config = GuidedConfig(
 ...     input_dim = input_dim,
 ...     latent_dim = latent_dim, 
-...     guided_dim = guided_dim
+...     guided_dims = guided_dims
 ... )
 ...
 >>> #using proteovae.models objects 
@@ -76,7 +83,7 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...         model_config = config,
 ...         encoder = enc,
 ...         decoder = dec, 
-...         guide = Guide(dim_in = guided_dim, dim_out = n_classes)
+...         guides = [Guide(dim_in = guided_dims[0], dim_out = n_classes)]
 )
 ...
 >>> #or with generic torch objects 
@@ -96,7 +103,7 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...         model_config = config,
 ...         encoder = enc,
 ...         decoder = custom_dec, 
-...         guide = Guide(dim_in = guided_dim, dim_out = n_classes)
+...         guides = [Guide(dim_in = guided_dims[0], dim_out = n_classes)]
 ```
 
 # Model Training 
