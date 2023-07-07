@@ -37,7 +37,7 @@ Version 0.0.1 now on PyPI! ❤️🇮🇹🧑‍🔬
 To install the latest stable release of this library run the following using ``pip`` 
 ```bash
 $ pip install proteovae
-``` 
+```
 
 For dev purposes you can also clone this repo and install locally like 
 ```bash 
