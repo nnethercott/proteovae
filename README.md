@@ -1,4 +1,3 @@
-
 <p align="center">
     <a>
 	    <img src='https://img.shields.io/badge/python-3.10-blueviolet' alt='Python' />
