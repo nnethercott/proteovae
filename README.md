@@ -57,13 +57,13 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...
 >>> input_dim = 64
 >>> latent_dim = 10
->>> guided_dims = [1,]
+>>> guided_dim = 1
 >>> n_classes = 2 # dummy 
 ...
 >>> config = GuidedConfig(
 ...     input_dim = input_dim,
 ...     latent_dim = latent_dim, 
-...     guided_dims = guided_dims
+...     guided_dim = guided_dim
 ... )
 ...
 >>> #using proteovae.models objects 
@@ -82,7 +82,7 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...         model_config = config,
 ...         encoder = enc,
 ...         decoder = dec, 
-...         guides = [Guide(dim_in = guided_dims[0], dim_out = n_classes)]
+...         guides = [Guide(dim_in = guided_dim, dim_out = n_classes)]
 )
 ...
 >>> #or with generic torch objects 
@@ -102,7 +102,7 @@ In addition to the models provided `proteovae.models.base` module you can also w
 ...         model_config = config,
 ...         encoder = enc,
 ...         decoder = custom_dec, 
-...         guides = [Guide(dim_in = guided_dims[0], dim_out = n_classes)]
+...         guides = [Guide(dim_in = guided_dim, dim_out = n_classes)]
 ```
 
 # Model Training 
