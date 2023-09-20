@@ -4,7 +4,7 @@ import torch.distributions as dist
 import torch.nn.functional as F
 from .utils import *
 from .base import *
-from typing import Optional, Union
+from typing import Optional, Union, List
 import numpy as np
 
 
@@ -302,7 +302,7 @@ class GuidedVAE(BetaVAE):
 
 
 # terrible on code-reuse; should restructure this part somehow
-class MultiGuidedVAE(GuidedVAE):
+class MultiGuidedVAE(BetaVAE):
     """Guided variational autoencoder implementation.
 
     Args:
@@ -320,7 +320,7 @@ class MultiGuidedVAE(GuidedVAE):
 
     """
 
-    def __init__(self, guides, **kwargs):
+    def __init__(self, guides : List[nn.Module], **kwargs):
         super().__init__(**kwargs)
 
         # Tuning ELBO
@@ -446,6 +446,15 @@ class MultiGuidedVAE(GuidedVAE):
                 guided_preds == y).sum().float()/guided_preds.size(0)
 
         return ModelOutput(**val_acc)
+    
+    def _elbo_scheduler_update(self, e):
+        """
+        adaptive updates of the loss terms over training.  Similar idea to capacitated training in
+        https://arxiv.org/abs/1804.03599 
+        """
+        self.beta = self.model_config.beta*self.elbo_scheduler['beta'](e)
+        self.eta = self.model_config.eta*self.elbo_scheduler['eta'](e)
+        self.gamma = self.model_config.gamma*self.elbo_scheduler['gamma'](e)
 
 
 class JointVAE(GuidedVAE):
